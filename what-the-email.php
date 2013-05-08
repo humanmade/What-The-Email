@@ -1,19 +1,79 @@
 <?php
 /**
- * Plugin Name: What the Email
- * Plugin URI: https://github.com/Automattic/What-the-Email
- * Description: Parse that email and tell me what it is!
- * Author: Daniel Bachhuber, Automattic
- * Version: 0.0
- * Author URI: http://automattic.com/
+ * What The Email
+ *
+ * Parse that email and tell me what it is.
+ *
+ * @author       Daniel Bachhuber <d@danielbachhuber.com>
  */
 
 class What_The_Email
 {
+	private $email;
 
-	private static $instance;
+	/**
+	 * @param object      $email     An email, as provided by imap_fetchheaders() and imap_fetchbody()
+	 */
+	function __construct( $email ) {
 
-	var $blocked_senders = array(
+		$this->email = $email;
+	}
+
+	/**
+	 * Methods you can use
+	 */
+
+	/**
+	 * Use regex to get the reply body of an email
+	 */
+	public function get_reply() {
+
+		$body = $this->email->body;
+
+		foreach( $this->email_body_regex as $pattern ) {
+			if ( preg_match( '/^((.|\n)*)' . $pattern . '/iU', $body, $matches ) ) {
+				return trim( $matches[1] );
+			}
+		}
+		return $body;
+	}
+
+	/**
+	 * Based on one of the fields, whether or not this email is likely a robot
+	 *
+	 * @return bool $block_it Whether or not the email is likely a robot
+	 */
+	public function is_robot() {
+
+		$fields = array(
+				'sender',
+				'subject',
+				'message'
+			);
+
+		foreach( $fields as $field ) {
+
+			$search = 'blocked_' . $field . 's';
+			if ( ! isset( $this->$search ) )
+				continue;
+
+			foreach( $this->$search as $trigger ) {
+
+				// @todo add getter methods for reach field
+				$value = '';
+				if ( false !== stripos( $value, $trigger ) )
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Strings for matching
+	 */
+
+	public $blocked_senders = array(
 			'twitter-invite-comment',
 			'notifications@academia.edu',
 			'invitations@boxbe.com',
@@ -40,7 +100,7 @@ class What_The_Email
 			'noreply@',
 		);
 
-	var $blocked_subjects = array(
+	public $blocked_subjects = array(
 			'Auto Response',
 			'auto-response',
 			'Auto Respond',
@@ -77,7 +137,7 @@ class What_The_Email
 			'Jawaban Otomatis',
 		);
 
-	var $blocked_messages = array(
+	public $blocked_messages = array(
 			'Having trouble viewing this email?',
 			'autoreply',
 			'auto reply',
@@ -156,53 +216,9 @@ go to my Inbox.',
 			'Mailiniz ulaşmıştır ilginiz için teşekkür ederiz.',
 		);
 
-	var $email_body_regex = array(
+	public $email_body_regex = array(
 			// On Saturday, October 27, 2012 at 3:28 PM, Testing wrote:
 			'(On|At|In|Il|Em|Pada|Le|Am){1}\s.+\n?(wrote|writes|scritto|escreveu|menulis|écrit|(schrieb.+)){1}\s?:',
 		);
 
-	public static function instance() {
-
-		if ( ! isset( self::$instance ) ) {
-			self::$instance = new What_The_Email;
-		}
-		return self::$instance;
-	}
-
-	/**
-	 * Based on one of the fields, whether or not this email should be blocked
-	 *
-	 * @param string $field Field to check (sender, subject, or message)
-	 * @param string $value Value to check
-	 * @return bool $block_it Whether or not the email should be blocked
-	 */
-	public function is_robot( $field, $value ) {
-		$search = 'blocked_' . $field . 's';
-		if ( ! isset( $this->$search ) )
-			return;
-
-		foreach( $this->$search as $trigger ) {
-			if ( false !== stripos( $value, $trigger ) )
-				return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Given body text for an email, parse out all of the quoted
-	 * junk, stuff added by the email client, etc.
-	 */
-	public function get_message( $email_body ) {
-		foreach( $this->email_body_regex as $pattern ) {
-			if ( preg_match( '/^((.|\n)*)' . $pattern . '/iU', $email_body, $matches ) ) {
-				return trim( $matches[1] );
-			}
-		}
-		return $email_body;
-	}
-
-}
-
-function What_The_Email() {
-	return What_The_Email::instance();
 }
