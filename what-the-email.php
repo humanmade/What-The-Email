@@ -218,7 +218,7 @@ go to my Inbox.',
 
 	public $email_body_regex = array(
 			// On Saturday, October 27, 2012 at 3:28 PM, Testing wrote:
-			'(On|At|In|Il|Em|Pada|Le|Am){1}\s.+\n?(wrote|writes|scritto|escreveu|menulis|écrit|(schrieb.+)){1}\s?:',
+			'(On|At|In|Il|Em|Pada|Le|Am){1}\s.+\n?.+(wrote|writes|scritto|escreveu|menulis|écrit|(schrieb.+)){1}\s?:',
 		);
 
 }
